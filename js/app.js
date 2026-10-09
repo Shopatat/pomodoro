@@ -131,7 +131,7 @@ if(window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListene
 // ---------- son ----------
 let ac = null;
 function ensureAudio(){
-  try{ if(!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); if(ac.state === 'suspended') ac.resume(); }
+  try{ if(!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); if(ac.state !== 'running') ac.resume(); } // sur iPhone il peut aussi être « interrupted »
   catch(e){ ac = null; }
   return ac;
 }
@@ -170,12 +170,15 @@ function playClick(){ if(!ac) return; tone(2800, ac.currentTime, 0.025, 0.12 * S
 function vib(p){ if(!S.vibrate) return; try{ navigator.vibrate && navigator.vibrate(p); }catch(e){} }
 
 // ---------- écran allumé ----------
-let wl = null;
-async function lockScreen(on){
+// Les appels sont mis en file : deux demandes simultanées créaient deux verrous, dont un jamais relâché.
+let wl = null, wlQueue = Promise.resolve();
+function lockScreen(on){ wlQueue = wlQueue.then(() => syncLock(on)); return wlQueue; }
+async function syncLock(on){
   try{
-    if(on && S.wakeLock && 'wakeLock' in navigator){ if(!wl){ wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => { wl = null; }); } }
-    else if(wl){ await wl.release(); wl = null; }
-  }catch(e){ wl = null; }
+    if(on && S.wakeLock && 'wakeLock' in navigator && !document.hidden){
+      if(!wl){ const w = await navigator.wakeLock.request('screen'); wl = w; w.addEventListener('release', () => { if(wl === w) wl = null; }); }
+    } else if(wl){ const w = wl; wl = null; await w.release(); }
+  }catch(e){}
 }
 document.addEventListener('visibilitychange', () => { if(!document.hidden) lockScreen(st.running); });
 
@@ -294,7 +297,11 @@ function restoreRun(){
   st.cycle = Math.max(0, Math.min(r.cycle | 0, S.cycles));
   prevCycle = st.cycle;
   st.mode = r.mode;
-  if(r.remaining > 0 || r.running){
+  const ended = r.running && r.endAt <= Date.now();
+  const sameDay = d => { const x = new Date(d); return x.toDateString() === new Date().toDateString(); };
+  if(ended && !sameDay(r.endAt)){
+    st.total = st.remaining = durOf(r.mode);
+  } else if(r.remaining > 0 || r.running){
     st.total = r.total; st.remaining = r.remaining; st.running = !!r.running; st.endAt = r.endAt;
   } else st.total = st.remaining = durOf(r.mode);
   st.span = spanFor(st.total / MIN); buildScale(); applyColors(); updateUI();
@@ -315,8 +322,9 @@ function reset(){
   st.running = false; st.total = st.remaining = durOf(st.mode);
   st.span = spanFor(S[st.mode]); buildScale(); updateUI();
 }
+let nextT = 0;
 function setMode(m, auto){
-  st.completing = false; st.mode = m; st.running = false;
+  clearTimeout(nextT); st.completing = false; st.mode = m; st.running = false;
   st.total = st.remaining = durOf(m); st.span = spanFor(S[m]);
   buildScale(); applyColors(); updateUI();
   if(auto) start();
@@ -341,7 +349,7 @@ function complete(natural){
     announce(was === 'focus' ? 'Focus terminé, place à la pause.' : 'Pause terminée, on y retourne.');
   }
   updateUI();
-  setTimeout(() => setMode(next, auto), natural ? 1100 : 0);
+  nextT = setTimeout(() => setMode(next, auto), natural ? 1100 : 0);
 }
 function skip(){ complete(false); }
 
@@ -400,7 +408,7 @@ function angleOf(e){
 function setMinutes(v){ st.total = st.remaining = v * MIN; }
 let drag = null;
 dial.addEventListener('pointerdown', e => {
-  if(e.button > 0 || st.completing) return;
+  if(e.button > 0 || st.completing || drag) return;
   ensureAudio();
   const rem = currentRem();
   drag = { last:angleOf(e), acc:0, start:rem / MIN, was:st.running, moved:false, val:Math.ceil(rem / MIN - 1e-9), id:e.pointerId };
