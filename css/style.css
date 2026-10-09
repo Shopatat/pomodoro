@@ -1,0 +1,159 @@
+/* Polices rangées dans fonts/ : l'appli marche sans internet, même au premier lancement hors ligne. */
+@font-face{font-family:"Bricolage Grotesque"; font-style:normal; font-weight:400 800; font-display:swap; src:url(../fonts/bricolage-latin.woff2) format("woff2")}
+@font-face{font-family:"Fraunces"; font-style:normal; font-weight:400 700; font-display:swap; src:url(../fonts/fraunces-latin.woff2) format("woff2")}
+@font-face{font-family:"Space Mono"; font-style:normal; font-weight:400; font-display:swap; src:url(../fonts/spacemono-400-latin.woff2) format("woff2")}
+@font-face{font-family:"Space Mono"; font-style:normal; font-weight:700; font-display:swap; src:url(../fonts/spacemono-700-latin.woff2) format("woff2")}
+
+:root{
+  --bg:#D5382B; --on-bg:#FFF1EC; --face:#FFF1EC; --ink:#4A120C; --accent:#D5382B; --stem:#2F7A36;
+  --font:"Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --size:1;
+  --dial:calc(min(86vw, 58vh, 440px) * var(--size));
+  --dial:calc(min(86vw, 58dvh, 440px) * var(--size));
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  padding-left:env(safe-area-inset-left,0px);
+  padding-right:env(safe-area-inset-right,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#12162A; --on-bg:#E8EBFF; --face:#1D2340; --ink:#E8EBFF; --accent:#FF6A55; --stem:#4CC47A; }
+}
+:root[data-theme="dark"]{ --bg:#12162A; --on-bg:#E8EBFF; --face:#1D2340; --ink:#E8EBFF; --accent:#FF6A55; --stem:#4CC47A; }
+/* Fond sur html aussi : sur iPhone, le rebond en haut et en bas montre la même couleur que l'appli. */
+html{height:100%; background:var(--bg); transition:background-color .8s ease; scroll-padding-top:env(safe-area-inset-top,0px); -webkit-text-size-adjust:100%; overscroll-behavior:none}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0; min-height:100%; background:var(--bg); color:var(--on-bg); font-family:var(--font);
+  transition:background-color .8s ease, color .8s ease; -webkit-tap-highlight-color:transparent; overflow-x:hidden;
+  /* Comme une appli : pas de loupe ni de menu « copier » sur un appui long, pas de zoom au double tap. */
+  -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation}
+.task{-webkit-user-select:text; user-select:text}
+button{font-family:inherit}
+button:focus-visible, input:focus-visible{outline:3px solid currentColor; outline-offset:3px}
+
+/* Haut */
+.top{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px 0; max-width:720px; margin:0 auto}
+.modes{display:flex; gap:3px; padding:4px; border-radius:999px; background:color-mix(in srgb, var(--on-bg) 15%, transparent); overflow-x:auto; scrollbar-width:none}
+.modes button{border:0; background:transparent; color:var(--on-bg); font-weight:600; font-size:.95rem; line-height:1; padding:10px 13px; border-radius:999px; cursor:pointer; white-space:nowrap; transition:background-color .35s, color .35s}
+.modes button[aria-selected="true"]{background:var(--on-bg); color:var(--bg)}
+.icon-btn{flex:none; width:44px; height:44px; border-radius:50%; border:0; display:grid; place-items:center; cursor:pointer;
+  background:color-mix(in srgb, var(--on-bg) 15%, transparent); color:var(--on-bg); transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.icon-btn:active{transform:scale(.9) rotate(-8deg)}
+
+/* Cadran */
+main{display:flex; flex-direction:column; align-items:center; padding:10px 16px 36px; gap:18px}
+.dial-wrap{position:relative; width:var(--dial); margin-top:4px}
+#dial{width:100%; height:auto; display:block; touch-action:none; cursor:grab; overflow:visible; outline:none;
+  filter:drop-shadow(0 18px 26px rgba(0,0,0,.28)); transform-origin:50% 52.83%}
+#dial:active{cursor:grabbing}
+#dial:focus-visible{outline:3px solid var(--on-bg); outline-offset:6px; border-radius:50%}
+.face{fill:var(--face); transition:fill .8s}
+.arc-track{fill:none; stroke:var(--ink); stroke-opacity:.07; stroke-width:16}
+.arc{fill:none; stroke:var(--accent); stroke-width:16; transition:stroke .8s}
+.tick{stroke:var(--ink); stroke-opacity:.35; stroke-width:1.5; stroke-linecap:round}
+.tick.major{stroke-opacity:.85; stroke-width:3}
+.lbl{fill:var(--ink); font-family:var(--font); font-weight:700; font-size:15px; text-anchor:middle; dominant-baseline:central}
+.knob{fill:var(--face); stroke:var(--ink); stroke-opacity:.14; stroke-width:1.5; transition:fill .8s}
+.ridge{stroke:var(--ink); stroke-opacity:.18; stroke-width:2; stroke-linecap:round}
+.grip{fill:var(--accent); transition:fill .8s}
+.stem{fill:var(--stem); stroke:var(--stem); stroke-width:3; stroke-linejoin:round; transition:fill .8s, stroke .8s}
+.readout{position:absolute; left:50%; top:52.83%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; color:var(--ink); transition:color .8s}
+.digits{font-weight:800; font-size:calc(var(--dial) * .14); line-height:1; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; padding:.08em 0}
+.digits .d{display:inline-block; width:.62em; text-align:center}
+.digits .colon{display:inline-block; width:.3em; text-align:center; transform:translateY(-.06em)}
+.digits .unit{font-size:.3em; font-weight:600; margin-left:.15em}
+.roll{animation:roll .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes roll{from{transform:translateY(-65%); opacity:0; filter:blur(2px)} to{transform:none; opacity:1; filter:none}}
+.sub{font-size:calc(var(--dial) * .042); font-weight:600; opacity:.65; margin-top:.3em; max-width:calc(var(--dial) * .42); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-inline:auto}
+
+.dial-wrap::after{content:""; position:absolute; left:50%; top:52.83%; width:94%; aspect-ratio:1; border-radius:50%;
+  border:3px solid var(--on-bg); transform:translate(-50%,-50%); opacity:0; pointer-events:none}
+.dial-wrap.pulse::after{animation:pulse .75s ease-out}
+@keyframes pulse{from{opacity:.75; transform:translate(-50%,-50%) scale(.96)} to{opacity:0; transform:translate(-50%,-50%) scale(1.28)}}
+.dial-wrap.ringing #dial{animation:ring 1.3s linear}
+@keyframes ring{
+  0%,100%{transform:rotate(0)}
+  5%,15%,25%,35%,45%,55%,65%{transform:rotate(-3deg)}
+  10%,20%,30%,40%,50%,60%,70%{transform:rotate(3deg)}
+  80%{transform:rotate(-1deg)} 90%{transform:rotate(1deg)}
+}
+
+/* Contrôles */
+.controls{display:flex; align-items:center; gap:18px; margin-top:4px}
+.main{min-width:9.5em; padding:18px 28px; border:0; border-radius:999px; background:var(--on-bg); color:var(--bg);
+  font-weight:800; font-size:1.25rem; line-height:1; cursor:pointer;
+  box-shadow:0 7px 0 color-mix(in srgb, var(--on-bg) 45%, var(--bg));
+  transition:transform .12s ease, box-shadow .12s ease, background-color .8s, color .8s}
+.main:active{transform:translateY(5px); box-shadow:0 2px 0 color-mix(in srgb, var(--on-bg) 45%, var(--bg))}
+.round{width:54px; height:54px; border-radius:50%; display:grid; place-items:center; cursor:pointer; color:var(--on-bg);
+  background:transparent; border:2px solid color-mix(in srgb, var(--on-bg) 40%, transparent);
+  transition:transform .35s cubic-bezier(.3,1.6,.5,1), border-color .3s}
+.round:hover{border-color:var(--on-bg)}
+.round:active{transform:scale(.88)}
+#resetBtn:active svg{transform:rotate(-120deg)}
+#resetBtn svg{transition:transform .4s cubic-bezier(.3,1.4,.5,1)}
+
+.dots{display:flex; gap:10px; min-height:14px}
+.dot{width:13px; height:13px; border-radius:50%; border:2px solid var(--on-bg); opacity:.55; transition:background-color .3s, opacity .3s}
+.dot.on{background:var(--on-bg); opacity:1}
+.dot.pop{animation:pop .55s cubic-bezier(.3,1.8,.5,1)}
+@keyframes pop{0%{transform:scale(.2)} 60%{transform:scale(1.35)} 100%{transform:scale(1)}}
+
+.task{width:min(100%, 360px); background:transparent; border:0; border-bottom:2px solid color-mix(in srgb, var(--on-bg) 35%, transparent);
+  color:var(--on-bg); font-family:var(--font); font-weight:600; font-size:1.05rem; text-align:center; padding:8px 4px; border-radius:0}
+.task::placeholder{color:var(--on-bg); opacity:.55}
+.task:focus{outline:none; border-bottom-color:var(--on-bg)}
+.stats{display:flex; flex-direction:column; align-items:center; gap:8px; font-size:.95rem; opacity:.9; text-align:center}
+.goal{width:min(70vw, 240px); height:6px; border-radius:3px; background:color-mix(in srgb, var(--on-bg) 20%, transparent); overflow:hidden}
+.goal i{display:block; height:100%; width:0; background:var(--on-bg); border-radius:inherit; transition:width .7s cubic-bezier(.3,1.4,.5,1)}
+.hint{margin:0; font-size:.85rem; opacity:.6; text-align:center; transition:opacity .4s}
+body.running .hint{opacity:0}
+
+/* Réglages */
+.backdrop{position:fixed; inset:0; background:rgba(0,0,0,.35); opacity:0; pointer-events:none; transition:opacity .3s; z-index:20}
+.backdrop.open{opacity:1; pointer-events:auto}
+.drawer{position:fixed; top:0; right:0; bottom:0; width:min(420px, 100vw); background:var(--face); color:var(--ink); z-index:21;
+  transform:translateX(105%); transition:transform .45s cubic-bezier(.2,1,.3,1), background-color .8s, color .8s;
+  display:flex; flex-direction:column; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  box-shadow:-20px 0 40px rgba(0,0,0,.2); visibility:hidden}
+.drawer.open{transform:none; visibility:visible}
+.drawer-head{display:flex; justify-content:space-between; align-items:center; padding:18px 20px 10px}
+.drawer-head h2{margin:0; font-size:1.6rem; font-weight:800; letter-spacing:-.01em}
+.close{border:0; background:color-mix(in srgb, var(--ink) 10%, transparent); color:var(--ink); padding:10px 16px; border-radius:999px; font-weight:700; cursor:pointer}
+.drawer-body{overflow-y:auto; padding:0 20px 28px; flex:1; overscroll-behavior:contain}
+.set-sec{padding:14px 0 10px; border-top:1px solid color-mix(in srgb, var(--ink) 12%, transparent)}
+.set-sec h3{margin:0 0 6px; font-size:1.1rem; font-weight:800}
+.row{padding:9px 0}
+.row-range label{display:flex; justify-content:space-between; gap:10px; font-weight:600; margin-bottom:4px}
+output{font-variant-numeric:tabular-nums; opacity:.7; white-space:nowrap}
+input[type=range]{width:100%; accent-color:var(--accent); height:28px; margin:0; cursor:pointer}
+.switch{display:flex; justify-content:space-between; align-items:center; gap:12px; font-weight:600; cursor:pointer; position:relative}
+.switch input{position:absolute; opacity:0; width:1px; height:1px}
+.switch i{flex:none; width:46px; height:28px; border-radius:14px; background:color-mix(in srgb, var(--ink) 20%, transparent); position:relative; transition:background-color .25s}
+.switch i::after{content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:var(--face);
+  box-shadow:0 1px 3px rgba(0,0,0,.3); transition:transform .38s cubic-bezier(.3,1.7,.5,1)}
+.switch input:checked + i{background:var(--accent)}
+.switch input:checked + i::after{transform:translateX(18px)}
+.switch input:focus-visible + i{outline:2px solid var(--ink); outline-offset:2px}
+.chips-label{font-weight:600; margin-bottom:8px}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chips button{border:1.5px solid color-mix(in srgb, var(--ink) 25%, transparent); background:transparent; color:var(--ink); border-radius:999px;
+  padding:8px 13px; font-weight:600; font-size:.9rem; cursor:pointer; transition:background-color .2s, color .2s, transform .3s cubic-bezier(.3,1.6,.5,1)}
+.chips button:active{transform:scale(.93)}
+.chips button[aria-checked="true"]{background:var(--ink); color:var(--face); border-color:var(--ink)}
+.row-color label{display:flex; justify-content:space-between; align-items:center; font-weight:600}
+input[type=color]{width:54px; height:36px; border:0; background:none; padding:0; cursor:pointer}
+.row-action button{width:100%; padding:12px; border-radius:12px; border:1.5px solid color-mix(in srgb, var(--ink) 25%, transparent);
+  background:transparent; color:var(--ink); font-weight:700; font-size:.95rem; cursor:pointer}
+.row-action button.danger{border-color:transparent; background:color-mix(in srgb, var(--ink) 9%, transparent)}
+.shortcuts{font-size:.88rem; line-height:1.9; opacity:.8; padding-top:14px; border-top:1px solid color-mix(in srgb, var(--ink) 12%, transparent)}
+kbd{font-family:inherit; font-weight:700; padding:1px 7px; border-radius:6px; border:1px solid color-mix(in srgb, var(--ink) 30%, transparent)}
+
+#fx{position:fixed; inset:0; pointer-events:none; z-index:30}
+.toast{position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom,0px)); transform:translate(-50%, calc(100% + 40px + env(safe-area-inset-bottom,0px))); background:var(--on-bg); color:var(--bg);
+  padding:12px 18px; border-radius:14px; font-weight:600; z-index:40; transition:transform .45s cubic-bezier(.3,1.5,.5,1); max-width:calc(100vw - 32px); text-align:center}
+.toast.show{transform:translate(-50%, 0)}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+
+.motion-none *, .motion-none *::before, .motion-none *::after{animation:none !important; transition:none !important}
+@media (max-width:380px){ .modes button{padding:9px 10px; font-size:.88rem} .main{min-width:8em; padding:16px 22px} .controls{gap:12px} }
