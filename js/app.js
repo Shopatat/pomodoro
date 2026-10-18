@@ -427,12 +427,12 @@ function tick(rem){
 // Pendant le focus, l'écran s'éteint doucement (noir complet : sur un écran OLED, les pixels noirs sont éteints).
 // Toucher le rallume quelques secondes. La dernière minute, des ondes discrètes ; les 15 dernières secondes,
 // il se rallume pour être pile allumé quand ça sonne. Pendant les pauses, il reste allumé.
-const veil = $('#veil');
+const veil = $('#veil'), VEIL_BLEED = 120; // le voile dépasse de l'écran en haut et en bas
 let veilLvl = 0, veilOp = -1, wakeUntil = 0, lastFrame = performance.now();
 function wake(){ wakeUntil = Date.now() + S.wakeFor * 1000; }
 function placeWaves(){
   const r = dial.getBoundingClientRect();
-  veil.style.setProperty('--cx', (r.left + r.width/2) + 'px'); veil.style.setProperty('--cy', (r.top + r.height*0.5283) + 'px');
+  veil.style.setProperty('--cx', (r.left + r.width/2) + 'px'); veil.style.setProperty('--cy', (r.top + r.height*0.5283 + VEIL_BLEED) + 'px');
   veil.style.setProperty('--r', r.width + 'px');
 }
 function updateVeil(rem, dt){
@@ -444,6 +444,9 @@ function updateVeil(rem, dt){
   const o = +(veilLvl * veilLvl * (3 - 2 * veilLvl)).toFixed(3); // départ et arrivée en douceur
   if(o !== veilOp){
     veilOp = o; veil.style.opacity = o;
+    // Le fond de la page s'assombrit aussi : sur iPhone, les zones sûres (barre d'accueil en bas) montrent ce fond, pas le voile
+    const r = document.documentElement; r.style.setProperty('--dim', (o * 100).toFixed(1) + '%'); r.classList.toggle('dimming', o > 0);
+    if(o === 0) applyColors(); else if(o >= 0.5){ const meta = document.querySelector('meta[name="theme-color"]'); if(meta) meta.setAttribute('content', '#000000'); }
     veil.classList.toggle('catch', o > 0.3);
     document.body.classList.toggle('veiled', o >= 1);
   }

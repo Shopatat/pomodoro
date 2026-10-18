@@ -21,6 +21,7 @@
 }
 :root[data-theme="dark"]{ --bg:#12162A; --on-bg:#E8EBFF; --face:#1D2340; --ink:#E8EBFF; --accent:#FF6A55; --stem:#4CC47A; --gloss:.32; }
 /* Fond sur html aussi : sur iPhone, le rebond en haut et en bas montre la même couleur que l'appli. */
+html.dimming{background:color-mix(in srgb, #000 var(--dim, 0%), var(--bg)); transition:none}
 html{height:100%; background:var(--bg); transition:background-color .8s ease; scroll-padding-top:env(safe-area-inset-top,0px); -webkit-text-size-adjust:100%; overscroll-behavior:none}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0; min-height:100%; background:var(--bg); color:var(--on-bg); font-family:var(--font);
@@ -262,7 +263,7 @@ kbd{font-family:inherit; font-weight:700; padding:1px 7px; border-radius:6px; bo
 
 #fx{position:fixed; inset:0; pointer-events:none; z-index:30}
 /* Écran noir pendant le focus : noir pur, pour que l'écran OLED éteigne ses pixels */
-.veil{position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; z-index:50; overflow:hidden; --cx:50vw; --cy:40vh; --r:80vw}
+.veil{position:fixed; inset:-120px 0; background:#000; opacity:0; pointer-events:none; z-index:50; overflow:hidden; --cx:50vw; --cy:40vh; --r:80vw}
 .veil.catch{pointer-events:auto; cursor:pointer}
 body.veiled .top, body.veiled main{visibility:hidden}
 .veil i{position:absolute; left:var(--cx); top:var(--cy); width:var(--r); aspect-ratio:1; border-radius:50%; opacity:0;
