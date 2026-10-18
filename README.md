@@ -26,6 +26,9 @@ que si l'appli est ouverte. Pour une longue session, active « Garder l'écran a
 - **Les ambiances** : pluie, vagues, cheminée, bruit brun ou blanc, fabriqués en direct (rien à télécharger).
 - **Le bilan** : touche le résumé du jour pour voir ta semaine, ta série de jours, tes records et le journal des tâches.
 - **Le mode zen** : pendant le focus, tout s'efface autour de la tomate.
+- **L'écran noir** : pendant le focus, l'écran passe doucement au noir complet (l'écran reste allumé pour pouvoir sonner).
+  Un toucher le rallume quelques secondes. La dernière minute, des ondes discrètes apparaissent, puis il se rallume
+  pendant les 15 dernières secondes pour être pile allumé à la sonnerie. Les pauses restent allumées.
 - **Tes données** restent sur le téléphone. Exporte-les depuis les réglages avant de changer d'appareil.
 
 ## Organisation des fichiers

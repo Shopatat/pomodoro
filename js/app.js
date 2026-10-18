@@ -13,6 +13,7 @@ const DEFAULTS = {
   showSeconds:true, showLabels:true, gloss:true, halo:true, grain:true,
   name:'', quotes:true, zen:true, showTask:true, showDots:true, showStats:true, streak:true,
   motion:'complete', digitAnim:true, particles:true, particleCount:90, shake:true, breathe:true,
+  blackout:true, fadeDur:30, wakeFor:5, waves:true, relight:true,
   notify:false, vibrate:true, wakeLock:false, tabTitle:true
 };
 
@@ -341,12 +342,12 @@ let wl = null, wlQueue = Promise.resolve();
 function lockScreen(on){ wlQueue = wlQueue.then(() => syncLock(on)); return wlQueue; }
 async function syncLock(on){
   try{
-    if(on && S.wakeLock && 'wakeLock' in navigator && !document.hidden){
+    if(on && (S.wakeLock || (S.blackout && st.mode === 'focus')) && 'wakeLock' in navigator && !document.hidden){
       if(!wl){ const w = await navigator.wakeLock.request('screen'); wl = w; w.addEventListener('release', () => { if(wl === w) wl = null; }); }
     } else if(wl){ const w = wl; wl = null; await w.release(); }
   }catch(e){}
 }
-document.addEventListener('visibilitychange', () => { if(!document.hidden){ lockScreen(st.running); renderStats(); } });
+document.addEventListener('visibilitychange', () => { if(!document.hidden){ lockScreen(st.running); renderStats(); wake(); } });
 
 // ---------- affichage ----------
 function currentRem(){ return st.running ? Math.max(0, st.endAt - Date.now()) : st.remaining; }
@@ -422,13 +423,49 @@ function tick(rem){
   if(st.running && rem <= 0) complete(true);
 }
 
-function frame(){
+// ---------- écran noir ----------
+// Pendant le focus, l'écran s'éteint doucement (noir complet : sur un écran OLED, les pixels noirs sont éteints).
+// Toucher le rallume quelques secondes. La dernière minute, des ondes discrètes ; les 15 dernières secondes,
+// il se rallume pour être pile allumé quand ça sonne. Pendant les pauses, il reste allumé.
+const veil = $('#veil');
+let veilLvl = 0, veilOp = -1, wakeUntil = 0, lastFrame = performance.now();
+function wake(){ wakeUntil = Date.now() + S.wakeFor * 1000; }
+function placeWaves(){
+  const r = dial.getBoundingClientRect();
+  veil.style.setProperty('--cx', (r.left + r.width/2) + 'px'); veil.style.setProperty('--cy', (r.top + r.height*0.5283) + 'px');
+  veil.style.setProperty('--r', r.width + 'px');
+}
+function updateVeil(rem, dt){
+  const active = S.blackout && st.running && st.mode === 'focus' && !drawerOpen && !bilanOpen && document.activeElement !== taskEl;
+  if(!active) veilLvl = Math.max(0, veilLvl - dt / 600);
+  else if(S.relight && rem <= 15000) veilLvl = Math.min(veilLvl, rem / 15000);
+  else if(Date.now() < wakeUntil) veilLvl = Math.max(0, veilLvl - dt / 900);
+  else veilLvl = Math.min(1, veilLvl + dt / (S.fadeDur * 1000));
+  const o = +(veilLvl * veilLvl * (3 - 2 * veilLvl)).toFixed(3); // départ et arrivée en douceur
+  if(o !== veilOp){
+    veilOp = o; veil.style.opacity = o;
+    veil.classList.toggle('catch', o > 0.3);
+    document.body.classList.toggle('veiled', o >= 1);
+  }
+  const waves = active && S.waves && rem <= 60000 && rem > 0 && o > 0.4;
+  if(waves !== veil.classList.contains('waves')){ if(waves) placeWaves(); veil.classList.toggle('waves', waves); }
+}
+// le premier toucher sur l'écran noir ne fait que le rallumer
+veil.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); wake(); });
+veil.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); });
+document.addEventListener('pointerdown', wake, true);
+document.addEventListener('keydown', wake, true);
+
+function frame(now){
+  const dt = Math.min(1000, Math.max(0, (now || performance.now()) - lastFrame)); lastFrame = now || performance.now();
   const rem = currentRem();
   const target = -(rem / MIN) * (360 / st.span);
   const k = S.motion === 'aucune' ? 1 : (st.dragging ? 0.45 : (S.motion === 'reduite' ? 0.3 : 0.12));
   st.dispRot += (target - st.dispRot) * k;
   if(Math.abs(target - st.dispRot) < 0.01) st.dispRot = target;
-  draw(); tick(rem);
+  updateVeil(rem, dt);
+  if(veilOp < 1) draw(); // écran noir : rien à dessiner dessous
+  tick(rem);
   requestAnimationFrame(frame);
 }
 setInterval(() => tick(currentRem()), 500);
@@ -761,6 +798,13 @@ const SCHEMA = [
     {k:'showDots', l:'Points du cycle', type:'toggle'},
     {k:'showStats', l:'Résumé du jour', type:'toggle'}
   ]},
+  { id:'noir', t:'Écran noir', d:'Pendant le focus, l’écran s’éteint doucement jusqu’au noir complet : rien pour te distraire, et ta batterie dit merci. Les pauses restent allumées.', items:[
+    {k:'blackout', l:'Éteindre l’écran pendant le focus', type:'toggle', d:'L’écran reste techniquement allumé (pour pouvoir sonner), mais tout en noir.'},
+    {k:'fadeDur', l:'Durée du fondu', type:'chips', o:[[10,'10 s'],[30,'30 s'],[60,'1 min'],[120,'2 min']], show:s => s.blackout},
+    {k:'wakeFor', l:'Rallumé quand tu touches', type:'chips', o:[[3,'3 s'],[5,'5 s'],[10,'10 s'],[20,'20 s']], show:s => s.blackout, d:'Le premier toucher ne fait que rallumer : pas de pause par erreur.'},
+    {k:'waves', l:'Ondes la dernière minute', type:'toggle', show:s => s.blackout, d:'Des cercles très discrets, pour sentir la fin approcher.'},
+    {k:'relight', l:'Se rallumer pour la sonnerie', type:'toggle', show:s => s.blackout, d:'L’écran revient doucement les 15 dernières secondes, pile allumé quand ça sonne.'}
+  ]},
   { id:'animations', t:'Animations', items:[
     {k:'motion', l:'Niveau', type:'chips', o:[['complete','Complètes'],['reduite','Réduites'],['aucune','Aucune']]},
     {k:'digitAnim', l:'Chiffres qui défilent', type:'toggle'},
@@ -783,7 +827,7 @@ const SCHEMA = [
     {type:'action', l:'Remettre les réglages par défaut', a:'resetSettings', danger:true}
   ]}
 ];
-const RERENDER = ['tick','customAccent','particles','ambient','autoBreak','autoFocus','focus','short','long','cycles'];
+const RERENDER = ['blackout','tick','customAccent','particles','ambient','autoBreak','autoFocus','focus','short','long','cycles'];
 const ACTIONS = {
   testBell(){ ensureAudio(); playBell(S.bellRepeat); },
   clearStats(){
@@ -920,7 +964,7 @@ function apply(k){
     case 'quotes': updateHint(); break;
     case 'tabTitle': updateTitle(currentRem()); break;
     case 'notify': if(S.notify) askNotify(); break;
-    case 'wakeLock': lockScreen(st.running); break;
+    case 'wakeLock': case 'blackout': lockScreen(st.running); break;
     case 'ambient': previewAmbient(); break;
     case 'ambVol': if(amb) amb.out.gain.setTargetAtTime(ambLevel(), ac.currentTime, 0.1); break;
     case 'ambBreaks': syncAmbient(); break;

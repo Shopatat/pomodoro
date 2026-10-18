@@ -261,6 +261,16 @@ kbd{font-family:inherit; font-weight:700; padding:1px 7px; border-radius:6px; bo
 .empty{opacity:.6; font-size:.9rem; line-height:1.45; margin:0}
 
 #fx{position:fixed; inset:0; pointer-events:none; z-index:30}
+/* Écran noir pendant le focus : noir pur, pour que l'écran OLED éteigne ses pixels */
+.veil{position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; z-index:50; overflow:hidden; --cx:50vw; --cy:40vh; --r:80vw}
+.veil.catch{pointer-events:auto; cursor:pointer}
+body.veiled .top, body.veiled main{visibility:hidden}
+.veil i{position:absolute; left:var(--cx); top:var(--cy); width:var(--r); aspect-ratio:1; border-radius:50%; opacity:0;
+  border:1.5px solid var(--accent); transform:translate(-50%,-50%) scale(.3)}
+.veil.waves i{animation:wave 4.5s cubic-bezier(.2,.6,.3,1) infinite}
+.veil.waves i:nth-child(2){animation-delay:1.5s}
+.veil.waves i:nth-child(3){animation-delay:3s}
+@keyframes wave{0%{opacity:0; transform:translate(-50%,-50%) scale(.3)} 20%{opacity:.16} 100%{opacity:0; transform:translate(-50%,-50%) scale(1.7)}}
 .toast{position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom,0px)); transform:translate(-50%, calc(100% + 40px + env(safe-area-inset-bottom,0px))); background:var(--on-bg); color:var(--bg);
   padding:13px 20px; border-radius:18px; font-weight:600; z-index:40; transition:transform .45s cubic-bezier(.3,1.5,.5,1); width:max-content; max-width:min(380px, calc(100vw - 32px)); text-align:center;
   box-shadow:0 14px 34px rgba(0,0,0,.28); cursor:pointer}
