@@ -5,7 +5,7 @@
 @font-face{font-family:"Space Mono"; font-style:normal; font-weight:700; font-display:swap; src:url(../fonts/spacemono-700-latin.woff2) format("woff2")}
 
 :root{
-  --bg:#D5382B; --on-bg:#FFF1EC; --face:#FFF1EC; --ink:#4A120C; --accent:#D5382B; --stem:#2F7A36;
+  --bg:#D5382B; --on-bg:#FFF1EC; --face:#FFF1EC; --ink:#4A120C; --accent:#D5382B; --stem:#2F7A36; --glow:#FFF1EC; --gloss:1;
   --font:"Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --size:1;
   --dial:calc(min(86vw, 58vh, 440px) * var(--size));
@@ -17,9 +17,9 @@
   padding-right:env(safe-area-inset-right,0px);
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){ --bg:#12162A; --on-bg:#E8EBFF; --face:#1D2340; --ink:#E8EBFF; --accent:#FF6A55; --stem:#4CC47A; }
+  :root:not([data-theme="light"]){ --bg:#12162A; --on-bg:#E8EBFF; --face:#1D2340; --ink:#E8EBFF; --accent:#FF6A55; --stem:#4CC47A; --glow:#FF6A55; --gloss:.32; }
 }
-:root[data-theme="dark"]{ --bg:#12162A; --on-bg:#E8EBFF; --face:#1D2340; --ink:#E8EBFF; --accent:#FF6A55; --stem:#4CC47A; }
+:root[data-theme="dark"]{ --bg:#12162A; --on-bg:#E8EBFF; --face:#1D2340; --ink:#E8EBFF; --accent:#FF6A55; --stem:#4CC47A; --gloss:.32; }
 /* Fond sur html aussi : sur iPhone, le rebond en haut et en bas montre la même couleur que l'appli. */
 html{height:100%; background:var(--bg); transition:background-color .8s ease; scroll-padding-top:env(safe-area-inset-top,0px); -webkit-text-size-adjust:100%; overscroll-behavior:none}
 *,*::before,*::after{box-sizing:inherit}
@@ -27,27 +27,41 @@ body{margin:0; min-height:100%; background:var(--bg); color:var(--on-bg); font-f
   transition:background-color .8s ease, color .8s ease; -webkit-tap-highlight-color:transparent; overflow-x:hidden;
   /* Comme une appli : pas de loupe ni de menu « copier » sur un appui long, pas de zoom au double tap. */
   -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation}
-.task{-webkit-user-select:text; user-select:text}
+.task, .row-text input{-webkit-user-select:text; user-select:text}
 button{font-family:inherit}
 button:focus-visible, input:focus-visible{outline:3px solid currentColor; outline-offset:3px}
+
+/* Lumière d'ambiance (plus clair en haut, plus sombre en bas) et grain papier très léger */
+body::before, body::after{content:""; position:fixed; inset:0; pointer-events:none; z-index:0}
+body::before{background:radial-gradient(120% 65% at 50% -5%, rgba(255,255,255,.16), transparent 62%), radial-gradient(110% 55% at 50% 108%, rgba(0,0,0,.24), transparent 65%)}
+body::after{opacity:.08; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.no-grain body::after{display:none}
+.top, main{position:relative; z-index:1}
 
 /* Haut */
 .top{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px 0; max-width:720px; margin:0 auto}
 .modes{display:flex; gap:3px; padding:4px; border-radius:999px; background:color-mix(in srgb, var(--on-bg) 15%, transparent); overflow-x:auto; scrollbar-width:none}
 .modes button{border:0; background:transparent; color:var(--on-bg); font-weight:600; font-size:.95rem; line-height:1; padding:10px 13px; border-radius:999px; cursor:pointer; white-space:nowrap; transition:background-color .35s, color .35s}
-.modes button[aria-selected="true"]{background:var(--on-bg); color:var(--bg)}
+.modes button[aria-selected="true"]{background:var(--on-bg); color:var(--bg); box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .icon-btn{flex:none; width:44px; height:44px; border-radius:50%; border:0; display:grid; place-items:center; cursor:pointer;
   background:color-mix(in srgb, var(--on-bg) 15%, transparent); color:var(--on-bg); transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
 .icon-btn:active{transform:scale(.9) rotate(-8deg)}
 
 /* Cadran */
-main{display:flex; flex-direction:column; align-items:center; padding:10px 16px 36px; gap:18px}
+/* clip : le halo dépasse de l'écran, sans ça l'iPhone élargit la page */
+main{display:flex; flex-direction:column; align-items:center; padding:10px 16px 36px; gap:18px; overflow-x:clip}
 .dial-wrap{position:relative; width:var(--dial); margin-top:4px}
-#dial{width:100%; height:auto; display:block; touch-action:none; cursor:grab; overflow:visible; outline:none;
+#dial{position:relative; width:100%; height:auto; display:block; touch-action:none; cursor:grab; overflow:visible; outline:none;
   filter:drop-shadow(0 18px 26px rgba(0,0,0,.28)); transform-origin:50% 52.83%}
 #dial:active{cursor:grabbing}
 #dial:focus-visible{outline:3px solid var(--on-bg); outline-offset:6px; border-radius:50%}
 .face{fill:var(--face); transition:fill .8s}
+/* Reflets : l'ombre du bord et l'éclat restent fixes, le cadran tourne dessous */
+.shade{fill:url(#gShade); pointer-events:none}
+.gloss{fill:url(#gGloss); opacity:calc(var(--gloss) * .8); pointer-events:none}
+.knob-light{fill:url(#gKnob); opacity:var(--gloss); pointer-events:none}
+.no-gloss .gloss, .no-gloss .knob-light, .no-gloss .shade{display:none}
 .arc-track{fill:none; stroke:var(--ink); stroke-opacity:.07; stroke-width:16}
 .arc{fill:none; stroke:var(--accent); stroke-width:16; transition:stroke .8s}
 .tick{stroke:var(--ink); stroke-opacity:.35; stroke-width:1.5; stroke-linecap:round}
@@ -61,10 +75,20 @@ main{display:flex; flex-direction:column; align-items:center; padding:10px 16px 
 .digits{font-weight:800; font-size:calc(var(--dial) * .14); line-height:1; letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; padding:.08em 0}
 .digits .d{display:inline-block; width:.62em; text-align:center}
 .digits .colon{display:inline-block; width:.3em; text-align:center; transform:translateY(-.06em)}
+body.running .digits .colon{animation:blink 2s steps(1) infinite}
+@keyframes blink{50%{opacity:.5}}
 .digits .unit{font-size:.3em; font-weight:600; margin-left:.15em}
 .roll{animation:roll .45s cubic-bezier(.2,1.4,.4,1)}
 @keyframes roll{from{transform:translateY(-65%); opacity:0; filter:blur(2px)} to{transform:none; opacity:1; filter:none}}
 .sub{font-size:calc(var(--dial) * .042); font-weight:600; opacity:.65; margin-top:.3em; max-width:calc(var(--dial) * .42); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-inline:auto}
+
+/* Halo : une lueur douce derrière la tomate, qui respire quand le temps file */
+.dial-wrap::before{content:""; position:absolute; left:50%; top:52.83%; width:150%; aspect-ratio:1; border-radius:50%; pointer-events:none;
+  transform:translate(-50%,-50%); background:radial-gradient(closest-side, color-mix(in srgb, var(--glow) 40%, transparent), color-mix(in srgb, var(--glow) 10%, transparent) 55%, transparent);
+  opacity:.5; transition:opacity 1.2s ease}
+body.running .dial-wrap::before{animation:glow 6s ease-in-out infinite}
+@keyframes glow{0%,100%{opacity:.4; transform:translate(-50%,-50%) scale(.94)} 50%{opacity:.8; transform:translate(-50%,-50%) scale(1.04)}}
+.no-halo .dial-wrap::before{display:none}
 
 .dial-wrap::after{content:""; position:absolute; left:50%; top:52.83%; width:94%; aspect-ratio:1; border-radius:50%;
   border:3px solid var(--on-bg); transform:translate(-50%,-50%); opacity:0; pointer-events:none}
@@ -80,22 +104,27 @@ main{display:flex; flex-direction:column; align-items:center; padding:10px 16px 
 
 /* Contrôles */
 .controls{display:flex; align-items:center; gap:18px; margin-top:4px}
-.main{min-width:9.5em; padding:18px 28px; border:0; border-radius:999px; background:var(--on-bg); color:var(--bg);
+.main{min-width:9.5em; padding:18px 28px; border:0; border-radius:999px; background-color:var(--on-bg); color:var(--bg);
+  background-image:linear-gradient(180deg, rgba(255,255,255,.4), rgba(255,255,255,0) 60%);
   font-weight:800; font-size:1.25rem; line-height:1; cursor:pointer;
-  box-shadow:0 7px 0 color-mix(in srgb, var(--on-bg) 45%, var(--bg));
+  box-shadow:0 7px 0 color-mix(in srgb, var(--on-bg) 45%, var(--bg)), 0 14px 24px rgba(0,0,0,.18);
   transition:transform .12s ease, box-shadow .12s ease, background-color .8s, color .8s}
-.main:active{transform:translateY(5px); box-shadow:0 2px 0 color-mix(in srgb, var(--on-bg) 45%, var(--bg))}
+.main:active{transform:translateY(5px); box-shadow:0 2px 0 color-mix(in srgb, var(--on-bg) 45%, var(--bg)), 0 4px 10px rgba(0,0,0,.15)}
 .round{width:54px; height:54px; border-radius:50%; display:grid; place-items:center; cursor:pointer; color:var(--on-bg);
   background:transparent; border:2px solid color-mix(in srgb, var(--on-bg) 40%, transparent);
-  transition:transform .35s cubic-bezier(.3,1.6,.5,1), border-color .3s}
+  transition:transform .35s cubic-bezier(.3,1.6,.5,1), border-color .3s, opacity 1.2s ease}
 .round:hover{border-color:var(--on-bg)}
 .round:active{transform:scale(.88)}
 #resetBtn:active svg{transform:rotate(-120deg)}
 #resetBtn svg{transition:transform .4s cubic-bezier(.3,1.4,.5,1)}
 
-.dots{display:flex; gap:10px; min-height:14px}
-.dot{width:13px; height:13px; border-radius:50%; border:2px solid var(--on-bg); opacity:.55; transition:background-color .3s, opacity .3s}
+/* Les petites tomates du cycle */
+.dots{display:flex; gap:12px; min-height:18px; padding-top:4px}
+.dots[hidden]{display:none}
+.dot{position:relative; width:14px; height:14px; border-radius:50%; border:2px solid var(--on-bg); opacity:.5; transition:background-color .3s, opacity .3s}
 .dot.on{background:var(--on-bg); opacity:1}
+.dot.on::after{content:""; position:absolute; left:50%; top:-6px; width:8px; height:5px; margin-left:-2px; background:var(--stem);
+  border-radius:0 100% 0 100%; transform:rotate(-12deg)}
 .dot.pop{animation:pop .55s cubic-bezier(.3,1.8,.5,1)}
 @keyframes pop{0%{transform:scale(.2)} 60%{transform:scale(1.35)} 100%{transform:scale(1)}}
 
@@ -103,34 +132,66 @@ main{display:flex; flex-direction:column; align-items:center; padding:10px 16px 
   color:var(--on-bg); font-family:var(--font); font-weight:600; font-size:1.05rem; text-align:center; padding:8px 4px; border-radius:0}
 .task::placeholder{color:var(--on-bg); opacity:.55}
 .task:focus{outline:none; border-bottom-color:var(--on-bg)}
-.stats{display:flex; flex-direction:column; align-items:center; gap:8px; font-size:.95rem; opacity:.9; text-align:center}
-.goal{width:min(70vw, 240px); height:6px; border-radius:3px; background:color-mix(in srgb, var(--on-bg) 20%, transparent); overflow:hidden}
-.goal i{display:block; height:100%; width:0; background:var(--on-bg); border-radius:inherit; transition:width .7s cubic-bezier(.3,1.4,.5,1)}
-.hint{margin:0; font-size:.85rem; opacity:.6; text-align:center; transition:opacity .4s}
-body.running .hint{opacity:0}
 
-/* Réglages */
+/* Résumé du jour (ouvre le bilan) */
+.today{display:flex; flex-direction:column; align-items:center; gap:9px; font:inherit; font-size:.95rem; color:var(--on-bg); text-align:center; cursor:pointer;
+  background:color-mix(in srgb, var(--on-bg) 9%, transparent); border:0; border-radius:18px; padding:12px 18px 14px;
+  transition:background-color .3s, transform .35s cubic-bezier(.3,1.6,.5,1), opacity 1.2s ease}
+.today[hidden]{display:none}
+.today:hover{background:color-mix(in srgb, var(--on-bg) 15%, transparent)}
+.today:active{transform:scale(.96)}
+.today-top{display:flex; gap:10px; align-items:baseline; justify-content:center; flex-wrap:wrap}
+.streak{font-weight:700}
+.streak:empty{display:none}
+.goal{display:block; width:min(70vw, 240px); height:6px; border-radius:3px; background:color-mix(in srgb, var(--on-bg) 20%, transparent); overflow:hidden}
+.goal i{display:block; height:100%; width:0; background:var(--on-bg); border-radius:inherit; transition:width .7s cubic-bezier(.3,1.4,.5,1)}
+.hint{margin:0; max-width:300px; min-height:2.6em; font-size:.88rem; line-height:1.35; opacity:.7; text-align:center; text-wrap:balance; transition:opacity .6s}
+
+/* Mode zen : pendant le focus, tout s'efface autour de la tomate */
+.top, .task, .dots, .hint{transition:opacity 1.2s ease}
+body.zen .top, body.zen .task, body.zen .today, body.zen .hint{opacity:.12}
+body.zen .dots, body.zen .controls .round{opacity:.35}
+body.zen .top:hover, body.zen .top:focus-within, body.zen .task:focus, body.zen .today:hover{opacity:1}
+
+/* Tiroirs (réglages et bilan) */
 .backdrop{position:fixed; inset:0; background:rgba(0,0,0,.35); opacity:0; pointer-events:none; transition:opacity .3s; z-index:20}
 .backdrop.open{opacity:1; pointer-events:auto}
 .drawer{position:fixed; top:0; right:0; bottom:0; width:min(420px, 100vw); background:var(--face); color:var(--ink); z-index:21;
-  transform:translateX(105%); transition:transform .45s cubic-bezier(.2,1,.3,1), background-color .8s, color .8s;
+  transform:translateX(105%); transition:transform .45s cubic-bezier(.2,1,.3,1), background-color .8s, color .8s, visibility 0s .45s;
   display:flex; flex-direction:column; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
   box-shadow:-20px 0 40px rgba(0,0,0,.2); visibility:hidden}
-.drawer.open{transform:none; visibility:visible}
+.drawer.open{transform:none; visibility:visible; transition:transform .45s cubic-bezier(.2,1,.3,1), background-color .8s, color .8s}
 .drawer-head{display:flex; justify-content:space-between; align-items:center; padding:18px 20px 10px}
 .drawer-head h2{margin:0; font-size:1.6rem; font-weight:800; letter-spacing:-.01em}
 .close{border:0; background:color-mix(in srgb, var(--ink) 10%, transparent); color:var(--ink); padding:10px 16px; border-radius:999px; font-weight:700; cursor:pointer}
-.drawer-body{overflow-y:auto; padding:0 20px 28px; flex:1; overscroll-behavior:contain}
-.set-sec{padding:14px 0 10px; border-top:1px solid color-mix(in srgb, var(--ink) 12%, transparent)}
+.drawer-body{overflow-y:auto; padding:0 20px 28px; flex:1; overscroll-behavior:contain; -webkit-overflow-scrolling:touch}
+.set-nav{position:sticky; top:0; z-index:2; display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; margin:0 -20px; padding:4px 20px 14px;
+  background:linear-gradient(var(--face) 72%, transparent)}
+.set-nav::-webkit-scrollbar{display:none}
+.set-nav button{flex:none; border:0; border-radius:999px; padding:8px 12px; font-weight:700; font-size:.82rem; cursor:pointer; white-space:nowrap;
+  background:color-mix(in srgb, var(--ink) 8%, transparent); color:var(--ink); transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.set-nav button:active{transform:scale(.94)}
+.set-sec{padding:14px 0 10px; border-top:1px solid color-mix(in srgb, var(--ink) 12%, transparent); scroll-margin-top:60px}
 .set-sec h3{margin:0 0 6px; font-size:1.1rem; font-weight:800}
+.sec-d{margin:0 0 6px; font-size:.86rem; line-height:1.4; opacity:.65}
+.help{margin:6px 0 0; font-size:.8rem; line-height:1.4; opacity:.6}
 .row{padding:9px 0}
 .row-range label{display:flex; justify-content:space-between; gap:10px; font-weight:600; margin-bottom:4px}
 output{font-variant-numeric:tabular-nums; opacity:.7; white-space:nowrap}
-input[type=range]{width:100%; accent-color:var(--accent); height:28px; margin:0; cursor:pointer}
+input[type=range]{width:100%; height:28px; margin:0; cursor:pointer; background:transparent; -webkit-appearance:none; appearance:none; --p:50%}
+input[type=range]::-webkit-slider-runnable-track{height:6px; border-radius:3px;
+  background:linear-gradient(90deg, var(--accent) var(--p), color-mix(in srgb, var(--ink) 15%, transparent) var(--p))}
+input[type=range]::-moz-range-track{height:6px; border-radius:3px; background:color-mix(in srgb, var(--ink) 15%, transparent)}
+input[type=range]::-moz-range-progress{height:6px; border-radius:3px; background:var(--accent)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:24px; height:24px; margin-top:-9px; border-radius:50%; background:#fff;
+  border:0; box-shadow:0 1px 4px rgba(0,0,0,.35), 0 0 0 1px rgba(0,0,0,.06); transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+input[type=range]::-moz-range-thumb{width:24px; height:24px; border-radius:50%; background:#fff; border:0; box-shadow:0 1px 4px rgba(0,0,0,.35)}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15)}
+input[type=range]:focus-visible{outline:2px solid var(--ink); outline-offset:2px; border-radius:6px}
 .switch{display:flex; justify-content:space-between; align-items:center; gap:12px; font-weight:600; cursor:pointer; position:relative}
 .switch input{position:absolute; opacity:0; width:1px; height:1px}
 .switch i{flex:none; width:46px; height:28px; border-radius:14px; background:color-mix(in srgb, var(--ink) 20%, transparent); position:relative; transition:background-color .25s}
-.switch i::after{content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:var(--face);
+.switch i::after{content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff;
   box-shadow:0 1px 3px rgba(0,0,0,.3); transition:transform .38s cubic-bezier(.3,1.7,.5,1)}
 .switch input:checked + i{background:var(--accent)}
 .switch input:checked + i::after{transform:translateX(18px)}
@@ -141,17 +202,70 @@ input[type=range]{width:100%; accent-color:var(--accent); height:28px; margin:0;
   padding:8px 13px; font-weight:600; font-size:.9rem; cursor:pointer; transition:background-color .2s, color .2s, transform .3s cubic-bezier(.3,1.6,.5,1)}
 .chips button:active{transform:scale(.93)}
 .chips button[aria-checked="true"]{background:var(--ink); color:var(--face); border-color:var(--ink)}
+.chips .sw{display:inline-block; width:14px; height:14px; border-radius:50%; margin:0 7px 0 -3px; vertical-align:-2px; box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
+.presets{display:grid; grid-template-columns:1fr 1fr; gap:8px; padding-top:4px}
+.presets button{display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left; padding:11px 12px; border-radius:14px; cursor:pointer;
+  border:1.5px solid color-mix(in srgb, var(--ink) 18%, transparent); background:transparent; color:var(--ink); font:inherit;
+  transition:background-color .2s, color .2s, transform .3s cubic-bezier(.3,1.6,.5,1)}
+.presets button:active{transform:scale(.95)}
+.presets button:last-child:nth-child(odd){grid-column:1 / -1}
+.presets b{font-size:.98rem}
+.presets span{font-variant-numeric:tabular-nums; font-weight:700; font-size:.8rem; opacity:.75}
+.presets small{font-size:.74rem; line-height:1.3; opacity:.65}
+.presets button[aria-pressed="true"]{background:var(--ink); color:var(--face); border-color:var(--ink)}
 .row-color label{display:flex; justify-content:space-between; align-items:center; font-weight:600}
 input[type=color]{width:54px; height:36px; border:0; background:none; padding:0; cursor:pointer}
+.row-text label{display:block; font-weight:600; margin-bottom:6px}
+/* 16px minimum : en dessous, Safari zoome sur le champ */
+.row-text input{width:100%; font:inherit; font-weight:600; font-size:16px; color:var(--ink); background:color-mix(in srgb, var(--ink) 6%, transparent);
+  border:1.5px solid color-mix(in srgb, var(--ink) 18%, transparent); border-radius:12px; padding:11px 13px}
+.row-text input::placeholder{color:var(--ink); opacity:.45}
+.row-text input:focus{outline:none; border-color:var(--accent)}
+.row-action{padding:5px 0}
 .row-action button{width:100%; padding:12px; border-radius:12px; border:1.5px solid color-mix(in srgb, var(--ink) 25%, transparent);
-  background:transparent; color:var(--ink); font-weight:700; font-size:.95rem; cursor:pointer}
+  background:transparent; color:var(--ink); font-weight:700; font-size:.95rem; cursor:pointer; transition:background-color .2s, color .2s}
 .row-action button.danger{border-color:transparent; background:color-mix(in srgb, var(--ink) 9%, transparent)}
-.shortcuts{font-size:.88rem; line-height:1.9; opacity:.8; padding-top:14px; border-top:1px solid color-mix(in srgb, var(--ink) 12%, transparent)}
+.row-action button.armed{background:#C8331F; color:#fff; animation:nudge .35s}
+@keyframes nudge{25%{transform:translateX(-4px)} 75%{transform:translateX(4px)}}
+.shortcuts{font-size:.88rem; line-height:1.9; opacity:.8; padding-top:14px; margin-top:8px; border-top:1px solid color-mix(in srgb, var(--ink) 12%, transparent)}
 kbd{font-family:inherit; font-weight:700; padding:1px 7px; border-radius:6px; border:1px solid color-mix(in srgb, var(--ink) 30%, transparent)}
+.signature{margin:18px 0 0; text-align:center; font-weight:700; opacity:.5; font-size:.9rem}
+
+/* Bilan */
+.bilan-msg{margin:4px 0 14px; font-size:1.05rem; font-weight:600; line-height:1.4}
+.tiles{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.tile{padding:12px 14px; border-radius:16px; background:color-mix(in srgb, var(--ink) 7%, transparent); display:flex; flex-direction:column; gap:2px}
+.tile b{font-size:1.35rem; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.01em}
+.tile b small{font-size:.6em; opacity:.55; margin-left:1px}
+.tile span{font-size:.8rem; opacity:.65}
+.tile.big{background:var(--accent); color:#fff}
+.tile.big span{opacity:.85}
+#bilanBody h3{margin:24px 0 10px; font-size:1.1rem; font-weight:800}
+.plot{position:relative; display:flex; gap:8px; height:120px; margin-top:22px}
+.plot::before{content:""; position:absolute; left:0; right:0; bottom:var(--goal); border-top:2px dashed color-mix(in srgb, var(--accent) 65%, transparent)}
+.bar{position:relative; flex:1}
+.bar i{position:absolute; left:50%; bottom:0; width:100%; max-width:34px; min-height:3px; transform:translateX(-50%); border-radius:8px 8px 4px 4px;
+  background:color-mix(in srgb, var(--ink) 22%, transparent); transform-origin:bottom; animation:grow .7s cubic-bezier(.3,1.4,.5,1) both}
+.bar.hit i{background:var(--accent)}
+.bar.now i{box-shadow:0 0 0 2px var(--ink)}
+.bar em{position:absolute; left:0; right:0; text-align:center; font-style:normal; font-size:.75rem; font-weight:700; opacity:.75; margin-bottom:4px}
+.days{display:flex; gap:8px; margin-top:6px}
+.days span{flex:1; text-align:center; font-size:.75rem; font-weight:700; opacity:.55}
+.days span.now{opacity:1}
+@keyframes grow{from{transform:translateX(-50%) scaleY(0)}}
+.journal{list-style:none; margin:0; padding:0}
+.journal li{display:flex; gap:12px; align-items:baseline; padding:10px 0; border-bottom:1px solid color-mix(in srgb, var(--ink) 10%, transparent)}
+.journal time{font-variant-numeric:tabular-nums; font-weight:700; opacity:.6; font-size:.85rem}
+.journal span{flex:1; font-weight:600; overflow-wrap:anywhere}
+.journal small{opacity:.6; white-space:nowrap}
+.empty{opacity:.6; font-size:.9rem; line-height:1.45; margin:0}
 
 #fx{position:fixed; inset:0; pointer-events:none; z-index:30}
 .toast{position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom,0px)); transform:translate(-50%, calc(100% + 40px + env(safe-area-inset-bottom,0px))); background:var(--on-bg); color:var(--bg);
-  padding:12px 18px; border-radius:14px; font-weight:600; z-index:40; transition:transform .45s cubic-bezier(.3,1.5,.5,1); max-width:calc(100vw - 32px); text-align:center}
+  padding:13px 20px; border-radius:18px; font-weight:600; z-index:40; transition:transform .45s cubic-bezier(.3,1.5,.5,1); width:max-content; max-width:min(380px, calc(100vw - 32px)); text-align:center;
+  box-shadow:0 14px 34px rgba(0,0,0,.28); cursor:pointer}
+.toast b{display:block; font-size:1.05rem; font-weight:800}
+.toast span{display:block; margin-top:3px; font-size:.9rem; font-weight:500; opacity:.85; line-height:1.35}
 .toast.show{transform:translate(-50%, 0)}
 .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
 

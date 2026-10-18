@@ -19,6 +19,15 @@ Bon à savoir : quand l'appli passe en arrière-plan, l'iPhone la met en veille.
 (au retour, le minuteur est à jour, même si l'iPhone a fermé l'appli), mais la sonnerie ne retentit
 que si l'appli est ouverte. Pour une longue session, active « Garder l'écran allumé » dans les réglages.
 
+## Ce qu'il y a dedans
+
+- **Le cadran** : tourne-le du doigt pour régler le temps, touche-le pour lancer. Reflet, halo et grain de fond se coupent dans les réglages.
+- **Les profils** : Classique (25/5/15), Sprint, Deep work, 52/17, Ultradien, ou tes propres durées.
+- **Les ambiances** : pluie, vagues, cheminée, bruit brun ou blanc, fabriqués en direct (rien à télécharger).
+- **Le bilan** : touche le résumé du jour pour voir ta semaine, ta série de jours, tes records et le journal des tâches.
+- **Le mode zen** : pendant le focus, tout s'efface autour de la tomate.
+- **Tes données** restent sur le téléphone. Exporte-les depuis les réglages avant de changer d'appareil.
+
 ## Organisation des fichiers
 
 | Fichier | Rôle |
