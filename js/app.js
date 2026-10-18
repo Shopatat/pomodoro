@@ -445,7 +445,7 @@ function updateVeil(rem, dt){
   if(o !== veilOp){
     veilOp = o; veil.style.opacity = o;
     // Le fond de la page s'assombrit aussi : sur iPhone, les zones sûres (barre d'accueil en bas) montrent ce fond, pas le voile
-    const r = document.documentElement; r.style.setProperty('--dim', (o * 100).toFixed(1) + '%'); r.classList.toggle('dimming', o > 0);
+    const r = document.documentElement; r.style.setProperty('--dim', (o * 100).toFixed(1) + '%'); r.classList.toggle('dimming', o > 0); r.classList.toggle('black', o >= 1);
     if(o === 0) applyColors(); else if(o >= 0.5){ const meta = document.querySelector('meta[name="theme-color"]'); if(meta) meta.setAttribute('content', '#000000'); }
     veil.classList.toggle('catch', o > 0.3);
     document.body.classList.toggle('veiled', o >= 1);
@@ -1030,6 +1030,9 @@ document.addEventListener('keydown', e => {
     case 'b': case 'B': openPanel(bilan); break;
   }
 });
+
+// numéro de version (le nom du cache du service worker), pour vérifier que l'appli est à jour
+try{ caches.keys().then(k => { const v = k.filter(x => x.startsWith('pomodoro-')).sort().pop(); if(v) $('#ver').textContent = 'Version ' + v.replace('pomodoro-', ''); }); }catch(e){}
 
 // ---------- go ----------
 applyAll();

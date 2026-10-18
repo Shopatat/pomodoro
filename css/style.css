@@ -21,7 +21,8 @@
 }
 :root[data-theme="dark"]{ --bg:#12162A; --on-bg:#E8EBFF; --face:#1D2340; --ink:#E8EBFF; --accent:#FF6A55; --stem:#4CC47A; --gloss:.32; }
 /* Fond sur html aussi : sur iPhone, le rebond en haut et en bas montre la même couleur que l'appli. */
-html.dimming{background:color-mix(in srgb, #000 var(--dim, 0%), var(--bg)); transition:none}
+html.dimming, html.dimming body{background:color-mix(in srgb, #000 var(--dim, 0%), var(--bg)); transition:none}
+html.black, html.black body{background:#000}
 html{height:100%; background:var(--bg); transition:background-color .8s ease; scroll-padding-top:env(safe-area-inset-top,0px); -webkit-text-size-adjust:100%; overscroll-behavior:none}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0; min-height:100%; background:var(--bg); color:var(--on-bg); font-family:var(--font);

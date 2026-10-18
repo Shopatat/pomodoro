@@ -1,6 +1,6 @@
 // Service worker : garde l'appli en cache pour qu'elle marche hors ligne.
 // Pense à changer VERSION à chaque mise à jour, sinon les téléphones gardent l'ancienne version.
-const VERSION = "pomodoro-v7";
+const VERSION = "pomodoro-v8";
 const FILES = [
   "./", "./index.html", "./manifest.webmanifest", "./css/style.css", "./js/app.js",
   "./fonts/bricolage-latin.woff2", "./fonts/fraunces-latin.woff2",
