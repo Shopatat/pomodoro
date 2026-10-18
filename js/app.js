@@ -64,17 +64,17 @@ const FONTS = {
 
 // ---------- textes ----------
 const QUOTES = [
-  'Une tomate à la fois.', 'Le plus dur, c’est de lancer le minuteur.', 'Pas besoin de motivation, juste de commencer.',
+  'Une session à la fois.', 'Le plus dur, c’est de lancer le minuteur.', 'Pas besoin de motivation, juste de commencer.',
   'Ferme les onglets inutiles, et c’est parti.', 'Petit pas après petit pas, grande journée.', 'Téléphone retourné, esprit tranquille.',
   'Fais-le mal, mais fais-le. Tu peaufineras après.', 'Ton futur toi te remercie déjà.', 'Un seul truc à la fois, c’est tout le secret.',
-  'Respire, choisis une tâche, tourne le cadran.', 'Commence par le plus petit morceau.', 'Tu n’as pas à tout finir, juste cette tomate.'
+  'Respire, choisis une tâche, tourne le cadran.', 'Commence par le plus petit morceau.', 'Tu n’as pas à tout finir, juste cette session.'
 ];
 const BREAK_TIPS = [
   'Lève-toi et étire-toi un peu.', 'Bois un grand verre d’eau.', 'Regarde au loin, tes yeux vont adorer.', 'Ouvre la fenêtre, prends l’air.',
   'Pas d’écran pendant la pause, promis ?', 'Roule des épaules, détends ta nuque.', 'Marche un peu, même jusqu’à la cuisine.'
 ];
 const LONG_TIPS = ['Grande pause méritée, va faire un tour.', 'Mange un morceau, tu l’as bien gagné.', 'Sors prendre l’air, ton cerveau recharge.', 'Déconnecte vraiment, tout sera encore là après.'];
-const FOCUS_DONE = ['Bien joué{n} !', 'Et une tomate de plus !', 'Magnifique{n} !', 'Session bouclée !', 'Tu gères{n} !', 'Dans la boîte{n} !'];
+const FOCUS_DONE = ['Bien joué{n} !', 'Et une session de plus !', 'Magnifique{n} !', 'Session bouclée !', 'Tu gères{n} !', 'Dans la boîte{n} !'];
 const BREAK_DONE = ['C’est reparti{n} !', 'En piste{n} !', 'On y retourne ?', 'Pause finie, à toi de jouer !'];
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const withName = s => s.replace('{n}', S.name.trim() ? ' ' + S.name.trim() : '');
@@ -556,7 +556,7 @@ function complete(natural){
     if(goalHit) toast(withName('Objectif du jour atteint{n} 🎉'), `${S.goal} sessions, chapeau. Tout ce qui vient maintenant, c’est du bonus.`);
     else if(was === 'focus'){
       const n = dayOf(today()).s;
-      toast(withName(pick(FOCUS_DONE)), `Tomate n°${n} aujourd’hui. ${next === 'long' ? pick(LONG_TIPS) : pick(BREAK_TIPS)}`);
+      toast(withName(pick(FOCUS_DONE)), `Session n°${n} aujourd’hui. ${next === 'long' ? pick(LONG_TIPS) : pick(BREAK_TIPS)}`);
     } else toast(withName(pick(BREAK_DONE)), pick(QUOTES));
   }
   updateUI();
@@ -568,7 +568,7 @@ async function notifyEnd(m){
   if(!S.notify || !('Notification' in window) || Notification.permission !== 'granted') return;
   const task = taskEl.value.trim();
   const title = m === 'focus' ? 'Focus terminé' : 'Pause terminée';
-  const body = m === 'focus' ? (task && S.showTask ? `« ${task} » : une tomate de plus. Lève-toi, souffle un peu.` : 'Lève-toi, souffle un peu.') : 'Allez, on y retourne.';
+  const body = m === 'focus' ? (task && S.showTask ? `« ${task} » : une session de plus. Lève-toi, souffle un peu.` : 'Lève-toi, souffle un peu.') : 'Allez, on y retourne.';
   const opts = { body, icon:'icons/icon-192.png', tag:'pomodoro' };
   // Sur iPhone, une appli de l'écran d'accueil ne peut notifier que par son service worker.
   try{
@@ -606,8 +606,8 @@ const fmtMin = m => m >= 60 ? `${Math.floor(m/60)} h ${pad(m % 60)}` : `${m} min
 function renderStats(){
   const { s, m } = dayOf(today()), g = S.goal;
   $('#statsText').textContent = s >= g
-    ? `Objectif atteint : ${s} tomates, ${fmtMin(m)}`
-    : `${s} sur ${g} tomates aujourd’hui${m ? ` · ${fmtMin(m)}` : ''}`;
+    ? `Objectif atteint : ${s} sessions, ${fmtMin(m)}`
+    : `${s} sur ${g} sessions aujourd’hui${m ? ` · ${fmtMin(m)}` : ''}`;
   $('#goalBar').style.width = Math.min(100, s / g * 100) + '%';
   const n = streak();
   $('#streak').textContent = S.streak && n >= 2 ? `🔥 ${n} jours` : '';
@@ -624,19 +624,19 @@ function renderBilan(){
   const max = Math.max(S.goal, ...week.map(d => d.s));
   const td = dayOf(k0), n = streak(), total = totalSessions();
   const log = hist.log.filter(e => dayKey(e.t) === k0).reverse();
-  const msg = !total ? 'Ta première tomate t’attend. Allez, juste une.'
+  const msg = !total ? 'Ta première session t’attend. Allez, juste une.'
     : td.s >= S.goal ? 'Journée remplie. Chapeau bas, vraiment.'
     : td.s ? `Encore ${S.goal - td.s} pour atteindre ton objectif.`
-    : n ? `Ta série de ${n} jour${n > 1 ? 's' : ''} t’attend. Une tomate et elle continue.` : 'Nouvelle journée, nouvelle tomate.';
+    : n ? `Ta série de ${n} jour${n > 1 ? 's' : ''} t’attend. Une session et elle continue.` : 'Nouvelle journée, nouvelle session.';
   $('#bilanBody').innerHTML = `
     <p class="bilan-msg">${esc(msg)}</p>
     <div class="tiles">
-      <div class="tile big"><b>${td.s}<small>/${S.goal}</small></b><span>tomates aujourd’hui</span></div>
+      <div class="tile big"><b>${td.s}<small>/${S.goal}</small></b><span>sessions aujourd’hui</span></div>
       <div class="tile big"><b>${fmtMin(td.m)}</b><span>de focus aujourd’hui</span></div>
       <div class="tile"><b>${n}</b><span>jour${n > 1 ? 's' : ''} d’affilée</span></div>
       <div class="tile"><b>${fmtMin(wMin)}</b><span>sur 7 jours (${wS})</span></div>
       <div class="tile"><b>${best}</b><span>record sur un jour</span></div>
-      <div class="tile"><b>${total}</b><span>tomates en tout</span></div>
+      <div class="tile"><b>${total}</b><span>sessions en tout</span></div>
     </div>
     <h3>Ta semaine</h3>
     <div class="plot" style="--goal:${(S.goal / max * 100).toFixed(1)}%" role="img" aria-label="${week.map(d => `${DAYS[dateOf(d.k).getDay()]} ${d.s}`).join(', ')}">
@@ -647,7 +647,7 @@ function renderBilan(){
     <h3>Le journal du jour</h3>
     ${log.length ? `<ol class="journal">${log.map(e => { const d = new Date(e.t);
       return `<li><time>${pad(d.getHours())}:${pad(d.getMinutes())}</time><span>${e.task ? esc(e.task) : '<i>Sans titre</i>'}</span><small>${e.m} min</small></li>`; }).join('')}</ol>`
-      : '<p class="empty">Rien pour l’instant. Chaque tomate terminée viendra s’inscrire ici, avec ta tâche.</p>'}`;
+      : '<p class="empty">Rien pour l’instant. Chaque session terminée viendra s’inscrire ici, avec ta tâche.</p>'}`;
 }
 
 // ---------- cadran tournant ----------
@@ -721,9 +721,9 @@ const SCHEMA = [
     {k:'autoDelay', l:'Petit délai avant de repartir', type:'chips', o:[[0,'Aucun'],[3,'3 s'],[5,'5 s'],[10,'10 s']], show:s => s.autoBreak || s.autoFocus, d:'Le temps de souffler. Démarrer pour partir tout de suite, Recommencer pour annuler.'}
   ]},
   { id:'objectifs', t:'Objectifs', items:[
-    {k:'goal', l:'Objectif du jour', type:'range', min:1, max:16, u:'tomates', d:'Huit tomates de 25 min, c’est déjà plus de 3 h de vraie concentration.'},
+    {k:'goal', l:'Objectif du jour', type:'range', min:1, max:16, u:'sessions', d:'Huit sessions de 25 min, c’est déjà plus de 3 h de vraie concentration.'},
     {k:'dayStart', l:'La journée commence à', type:'range', min:0, max:8, u:'h', d:'Pour les couche-tard : une session à 1 h du matin compte pour la veille.'},
-    {k:'streak', l:'Afficher ta série de jours', type:'toggle', d:'Une flamme s’affiche dès 2 jours d’affilée avec au moins une tomate.'}
+    {k:'streak', l:'Afficher ta série de jours', type:'toggle', d:'Une flamme s’affiche dès 2 jours d’affilée avec au moins une session.'}
   ]},
   { id:'son', t:'Son', items:[
     {k:'bell', l:'Sonnerie', type:'chips', o:[['mecanique','Mécanique'],['cloche','Cloche'],['carillon','Carillon'],['marimba','Marimba'],['doux','Douce'],['aucun','Aucune']]},
@@ -758,7 +758,7 @@ const SCHEMA = [
     {k:'quotes', l:'Phrases d’encouragement', type:'toggle', d:'Sous le cadran, et des conseils de pause pendant les pauses.'},
     {k:'zen', l:'Mode zen pendant le focus', type:'toggle', d:'Tout s’efface autour de la tomate quand le temps tourne.'},
     {k:'showTask', l:'Champ « sur quoi tu bosses »', type:'toggle', d:'La tâche s’affiche dans le cadran et s’inscrit dans ton journal.'},
-    {k:'showDots', l:'Petites tomates du cycle', type:'toggle'},
+    {k:'showDots', l:'Points du cycle', type:'toggle'},
     {k:'showStats', l:'Résumé du jour', type:'toggle'}
   ]},
   { id:'animations', t:'Animations', items:[
@@ -857,7 +857,7 @@ function row(it){
       ['focus','short','long','cycles'].forEach(k => { S[k] = p[k]; });
       save(); vib(8);
       if(!st.running && !st.completing && st.remaining === st.total) reset();
-      renderDots(); rerenderSettings(); toast(`Profil ${p.name}`, `${p.focus} min de focus, ${p.short} de pause, ${p.long} toutes les ${p.cycles} tomates.`);
+      renderDots(); rerenderSettings(); toast(`Profil ${p.name}`, `${p.focus} min de focus, ${p.short} de pause, ${p.long} toutes les ${p.cycles} sessions.`);
     }));
   } else if(it.type === 'action'){
     r.innerHTML = `<button type="button" id="${id}" class="${it.danger ? 'danger' : ''}">${it.l}</button>`;
